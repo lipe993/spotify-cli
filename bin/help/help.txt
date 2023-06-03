@@ -1,0 +1,9 @@
+usage:
+    spotify-cli COMMAND [options]
+
+commands:
+    get
+    search
+    play
+    pause
+    help

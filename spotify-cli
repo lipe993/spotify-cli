@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# get client credentials
+client_id=$(cat client_credentials.json | python3 -c "import json; print(json.loads(input())['client_id'])")
+client_secret=$(cat client_credentials.json | python3 -c "import json; print(json.loads(input())['client_secret'])")
+if [ $(echo "$@" | node ./src/getArgumentsFromCli "--no-user" -b) == "true" ]; then
+    authorization="$(node ./src/auth.js --id $client_id --secret $client_secret --no-user)"
+elif [ $(echo "$@" | node ./src/getArgumentsFromCli "--no-auth" -b) == "true" ]; then
+    authorization=""
+else
+    authorization=$(node ./src/auth.js --id $client_id --secret $client_secret --user)
+fi
+
+case $1 in
+    # spotify-cli get ...
+    get)
+        ./bin/get.sh "$authorization" $2 $3 $4
+        ;;
+    # spotify-cli search ...
+    search)
+        ./bin/search.sh $2 "$3" "$authorization"
+        ;;
+    # spotify-cli play [uri] [--device [device id]]
+    play)
+        uri=$2
+        node ./bin/play.js "$2" --device "$(echo $@ | node ./src/getArgumentsFromCli "--device")" --auth "$authorization"
+        ;;
+    pause)
+        node ./bin/pause.js --device $(echo $@ | node ./src/getArgumentsFromCli "--device") --auth "$authorization"
+        ;;
+    *)
+        ./bin/help.sh
+        ;;
+esac
